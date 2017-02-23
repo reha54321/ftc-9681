@@ -42,7 +42,7 @@ import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 
-@Autonomous(name = "Auto_1.0", group = "Sensor")
+@Autonomous(name = "Auto_1.7", group = "Sensor")
 
 public class Auto extends LinearOpMode {
 
@@ -55,6 +55,7 @@ public class Auto extends LinearOpMode {
     //declare drive motors
     DcMotor motorFrontRight, motorFrontLeft, motorBackRight, motorBackLeft;
 
+    public int heading;
     @Override
     public void runOpMode() throws InterruptedException
     {
@@ -64,7 +65,7 @@ public class Auto extends LinearOpMode {
         final float values[] = hsvValues;
         int colorBeacon1 = 0;
         boolean isCloseEnough = false;
-        int heading = 0;
+        boolean enableLED = false;
 
         /* values for int color
            blue = 1
@@ -91,21 +92,13 @@ public class Auto extends LinearOpMode {
 
         //Switching to passive mode as enableLED = false
 
-        colorSensor.enableLed(false); //Don't delete this
+        colorSensor.enableLed(enableLED); //Don't delete this
 
         //calibrating the gyro sensor to learn what is 0 degree orientation
 
         telemetry.addData(">", "Gyro Calibrating. Do Not move!");
         telemetry.update();
         gyro.calibrate();
-
-        // make sure the gyro is calibrated.
-
-        while (!isStopRequested() && gyro.isCalibrating())
-        {
-            sleep(50);
-            idle();
-        }
 
         telemetry.addData(">", "Gyro Calibrated.  Press Start.");
         telemetry.update();
@@ -131,6 +124,8 @@ public class Auto extends LinearOpMode {
             telemetry.addData("ODS normal ", ODS.getLightDetected());
             telemetry.addData("Gyro heading ", heading);
             telemetry.update();
+
+            alignToDegree(90, 3);
 
 
         }
@@ -180,20 +175,31 @@ public class Auto extends LinearOpMode {
     }
     //Straighten to whatever degree is inputted with a set threshold
 
-    public void alignToDegree(int heading, int deg, int threshold) throws InterruptedException
+    public void alignToDegree( int deg, int threshold) throws InterruptedException
     {
         boolean degreeAchieved = false;
         while((heading > deg + threshold || heading < deg - threshold) && degreeAchieved == false)
         {
+            heading = gyro.getHeading();
             telemetry.addData("Aligning to ", deg);
             telemetry.addData("Current heading ", heading);
+
             telemetry.update();
             if(heading  > deg) {
                 spinLeftCONT();
+                heading = gyro.getHeading();
+                telemetry.addData("Aligning to ", deg);
+                telemetry.addData("Current heading ", heading);
+
+                telemetry.update();
 
             } else if (heading < deg){
                 spinRightCONT();
+                heading = gyro.getHeading();
+                telemetry.addData("Aligning to ", deg);
+                telemetry.addData("Current heading ", heading);
 
+                telemetry.update();
             }
 
         }
@@ -257,7 +263,7 @@ public class Auto extends LinearOpMode {
         stopDriving();
     }
 
-    public void driveBackground(int time) throws InterruptedException
+    public void driveBackward(int time) throws InterruptedException
     {
         motorFrontRight.setPower(-1);
         motorBackRight.setPower(-1);
@@ -292,21 +298,22 @@ public class Auto extends LinearOpMode {
     }
     public void spinRightCONT()
     {
-        motorBackLeft.setPower(1);
-        motorBackRight.setPower(-1);
-        motorFrontLeft.setPower(1);
-        motorFrontRight.setPower(-1);
+        motorBackLeft.setPower(0.1);
+        motorBackRight.setPower(-0.1);
+        motorFrontLeft.setPower(0.1);
+        motorFrontRight.setPower(-0.1);
 
 
     }
 
     public void spinLeftCONT() {
         {
-            motorBackLeft.setPower(-1);
-            motorBackRight.setPower(1);
-            motorFrontLeft.setPower(-1);
-            motorFrontRight.setPower(1);
+            motorBackLeft.setPower(-0.1);
+            motorBackRight.setPower(0.1);
+            motorFrontLeft.setPower(-0.1);
+            motorFrontRight.setPower(0.1);
         }
 
     }
+
 }
